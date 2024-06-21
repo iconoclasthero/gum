@@ -11,6 +11,7 @@
 package choose
 
 import (
+    "strconv"  // added bjv
 	"strings"
 	"time"
 
@@ -36,6 +37,7 @@ type model struct {
 	currentOrder     int
 	paginator        paginator.Model
 	aborted          bool
+    startPosition    string   // added bjv
 
 	// styles
 	cursorStyle       lipgloss.Style
@@ -52,7 +54,36 @@ type item struct {
 	order    int
 }
 
+
+
+
+
 func (m model) Init() tea.Cmd {
+    // Set the initial index based on the starting position
+    switch m.startPosition {
+    case "middle":
+        m.index = len(m.items) / 2
+    case "end", "-1":
+        m.index = len(m.items) - 1
+    default:
+        // Assume the startPosition is a number
+        if pos, err := strconv.Atoi(m.startPosition); err == nil {
+            if pos >= 0 && pos < len(m.items) {
+                m.index = pos
+            } else if pos >= len(m.items) {
+                m.index = len(m.items) - 1
+            } else {
+                m.index = 0
+            }
+        } else {
+            m.index = 0 // Default to start if parsing fails
+        }
+    }
+
+	// Set the initial paginator page based on the index
+	page := m.index / m.height
+	m.paginator.Page = page
+
 	return timeout.Init(m.timeout, nil)
 }
 

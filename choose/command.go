@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/paginator"
@@ -87,8 +88,23 @@ func (o Options) Run() error {
 		items[i] = item{text: option, selected: isSelected, order: order}
 	}
 
-	// Use the pagination model to display the current and total number of
-	// pages.
+	// Parse and set the starting index based on the position flag
+	switch o.Position {
+	case "middle":
+		startingIndex = len(o.Options) / 2
+	case "end", "-1":
+		startingIndex = len(o.Options) - 1
+	default:
+		if idx, err := strconv.Atoi(o.Position); err == nil {
+			if idx >= 0 && idx < len(o.Options) {
+				startingIndex = idx
+			} else if idx >= len(o.Options) {
+				startingIndex = len(o.Options) - 1
+			}
+		}
+	}
+
+	// Use the pagination model to display the current and total number of pages.
 	pager := paginator.New()
 	pager.SetTotalPages((len(items) + o.Height - 1) / o.Height)
 	pager.PerPage = o.Height
